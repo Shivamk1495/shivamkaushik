@@ -1,4 +1,4 @@
 User-agent: *
 Disallow:
 
-Sitemap: https://shivamk1495.github.io//sitemap.xml
+Sitemap: https://shivamk1495.github.io/shivamkaushik//sitemap.xml
