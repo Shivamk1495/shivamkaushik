@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shivam Kaushik | Neuroscience Researcher</title>
+    <style>
+        /* Using Inter to mimic Apple's San Francisco font */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        :root {
+            --bg-base: #000000; 
+            /* Apple-style deep vibrant accents */
+            --neon-blue: #0A84FF; /* Apple Blue */
+            --neon-purple: #BF5AF2; /* Apple Purple */
+            --neon-cyan: #64D2FF; /* Apple Light Blue for Action Potentials */
+            
+            --text-main: #F5F5F7;
+            --text-muted: #86868B;
+            
+            /* VisionOS / Apple Glass Variables */
+            --glass-bg: rgba(20, 20, 22, 0.45);
+            --glass-border: rgba(255, 255, 255, 0.12);
+            --glass-highlight: rgba(255, 255, 255, 0.05);
+            --blur-heavy: blur(40px) saturate(180%);
+            --blur-light: blur(20px) saturate(150%);
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* -------------------------------------
+            LIVE NEURAL BACKGROUND (Behind Glass)
+            ------------------------------------- */
+        #neural-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            background: radial-gradient(circle at 50% 50%, #0d0d14 0%, #000000 100%);
+        }
+
+        /* -------------------------------------
+            APPLE GLOSSY TOOLBAR (Header)
+            ------------------------------------- */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 75px;
+            background: rgba(18, 18, 20, 0.5);
+            backdrop-filter: var(--blur-heavy);
+            -webkit-backdrop-filter: var(--blur-heavy);
+            border-bottom: 1px solid var(--glass-border);
+            z-index: 2000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 4%;
+            box-sizing: border-box;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .profile-photo {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.2);
+            object-fit: cover;
+            background-color: #1c1c1e;
+        }
+
+        .brand-text h1 {
+            font-size: 1.15rem;
+            margin: 0;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            color: #fff;
+        }
+
+        .brand-text p {
+            font-size: 0.75rem;
+            margin: 0;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .nav-links .nav-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .nav-links .nav-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .nav-links .nav-btn.active {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .btn-highlight {
+            margin-left: 10px;
+            padding: 8px 18px;
+            background: var(--text-main);
+            color: #000 !important;
+            border: none;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .btn-highlight:hover {
+            transform: scale(1.05);
+            background: #fff;
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
+        }
+
+        /* -------------------------------------
+            MAIN CONTENT & GLOSSY PANELS
+            ------------------------------------- */
+        main {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            padding: 0;
+            margin: 0;
+        }
+
+        .page {
+            display: none;
+            width: 100%;
+            min-height: 100vh;
+            padding-top: 100px; 
+            padding-bottom: 50px;
+            box-sizing: border-box;
+            opacity: 0;
+            transform: translateY(20px) scale(0.98);
+        }
+
+        .page.active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: appleFadeIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        @keyframes appleFadeIn {
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .content-container {
+            width: 90%;
+            max-width: 1100px;
+        }
+
+        /* The Apple Glass Panel */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: var(--blur-heavy);
+            -webkit-backdrop-filter: var(--blur-heavy);
+            border: 1px solid var(--glass-border);
+            border-top: 1px solid rgba(255,255,255,0.25); /* Top highlight for physical glass look */
+            border-radius: 32px; /* Smooth Apple-style corners */
+            padding: 4rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4), inset 0 1px 0 var(--glass-highlight);
+        }
+
+        h2 {
+            font-size: 2.8rem;
+            color: #fff;
+            margin-top: 0;
+            margin-bottom: 2rem;
+            font-weight: 700;
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, #fff 0%, #a1a1a6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h3 {
+            color: #fff;
+            font-size: 1.4rem;
+            margin-bottom: 0.3rem;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        .meta-info {
+            font-size: 0.95rem;
+            color: var(--neon-blue);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+        }
+
+        ul { padding-left: 20px; font-size: 1.05rem; color: #d2d2d7; }
+        li { margin-bottom: 12px; }
+        strong { color: #fff; font-weight: 600; }
+
+        /* Social Media Icons - Apple Style Pill Buttons */
+        .social-row { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 2.5rem; }
+        .social-btn {
+            display: flex; align-items: center; gap: 10px; padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 30px; color: #fff; text-decoration: none; font-weight: 500;
+            transition: all 0.3s ease; font-size: 0.95rem;
+            backdrop-filter: var(--blur-light);
+            -webkit-backdrop-filter: var(--blur-light);
+        }
+        .social-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.03);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        .social-btn svg { width: 18px; height: 18px; fill: currentColor; }
+
+        /* Experience Grid */
+        .split-grid {
+            display: grid; grid-template-columns: 2fr 1fr; gap: 30px;
+            margin-bottom: 3.5rem; align-items: stretch;
+            background: rgba(0,0,0,0.2);
+            padding: 30px;
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .uni-portal {
+            display: flex; flex-direction: column;
+            justify-content: center; gap: 12px;
+            border-left: 1px solid rgba(255,255,255,0.1);
+            padding-left: 30px;
+        }
+        
+        .uni-btn {
+            display: block; text-align: center; padding: 12px; 
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff; text-decoration: none; border: none;
+            border-radius: 14px; font-weight: 500; transition: all 0.3s ease; font-size: 0.9rem;
+        }
+        .uni-btn:hover { background: rgba(255, 255, 255, 0.15); transform: scale(1.02); }
+
+        /* Links & Buttons */
+        .paper-link {
+            color: var(--text-main); text-decoration: none; display: flex;
+            justify-content: space-between; align-items: center;
+            padding: 20px; border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255, 255, 255, 0.03); margin-bottom: 15px; font-size: 1.05rem;
+            transition: all 0.3s ease; border-radius: 16px; position: relative;
+            overflow: hidden;
+        }
+        .paper-link:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255,255,255,0.2);
+            transform: scale(1.01);
+        }
+
+        /* NEW: Open Button Style for Manuscripts */
+        .open-btn-hover {
+            background: var(--neon-blue);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            opacity: 0;
+            transform: translateX(20px);
+            transition: all 0.3s ease;
+        }
+        .paper-link:hover .open-btn-hover {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* GALLERY SECTION */
+        .gallery-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px;
+        }
+        .gallery-item {
+            position: relative; border-radius: 24px; overflow: hidden; aspect-ratio: 16/10;
+            border: 1px solid rgba(255,255,255,0.1); background: #fff;
+            transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .gallery-item:hover { transform: scale(1.03); border-color: rgba(255,255,255,0.3); z-index: 2; }
+        .gallery-img { width: 100%; height: 100%; object-fit: contain; padding: 10px; box-sizing: border-box; }
+        .gallery-caption {
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            padding: 15px; box-sizing: border-box; font-size: 0.85rem; font-weight: 500;
+            transform: translateY(100%); transition: transform 0.3s ease;
+            color: #fff; line-height: 1.4;
+        }
+        .gallery-item:hover .gallery-caption { transform: translateY(0); }
+
+        /* BLOG SECTION */
+        .blog-grid { display: grid; grid-template-columns: 1fr; gap: 30px; }
+        .blog-post {
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 24px; padding: 35px; transition: all 0.3s ease;
+        }
+        .blog-post:hover { border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.06); }
+        .blog-date { color: var(--neon-blue); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+        .blog-title { font-size: 1.8rem; color: #fff; margin: 0 0 15px 0; letter-spacing: -0.5px; }
+        .blog-content { color: #a1a1a6; line-height: 1.7; margin: 0; }
+
+        /* CONTACT & SCHEDULER SECTION */
+        .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        .contact-card {
+            background: rgba(255,255,255,0.03); border-radius: 24px; padding: 40px;
+            border: 1px solid rgba(255,255,255,0.08); text-align: center;
+        }
+        .contact-card h3 { font-size: 1.8rem; margin-top: 0; }
+        .btn-large {
+            display: inline-block; padding: 16px 32px;
+            background: var(--text-main); color: #000;
+            text-decoration: none; border-radius: 30px; font-weight: 600;
+            margin-top: 20px; transition: all 0.3s ease;
+        }
+        .btn-large:hover { transform: scale(1.05); background: #fff; box-shadow: 0 10px 20px rgba(255,255,255,0.2); }
+
+        /* CV & Floating Download */
+        .cv-fullscreen-container { 
+            width: 100%; height: calc(100vh - 150px); 
+            border-radius: 24px; overflow: hidden;
+            border: 1px solid var(--glass-border);
+            background: #1c1c1e; 
+        }
+        .circular-download {
+            position: fixed; bottom: 40px; right: 40px; width: 60px; height: 60px;
+            background: rgba(255,255,255,0.1); backdrop-filter: var(--blur-heavy); -webkit-backdrop-filter: var(--blur-heavy);
+            color: #fff; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 2000; opacity: 0; pointer-events: none;
+            transform: scale(0.5); transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        #page-cv.active .circular-download { opacity: 1; pointer-events: auto; transform: scale(1); }
+        .circular-download:hover { transform: scale(1.1); background: #fff; color: #000; }
+        .circular-download svg { width: 24px; height: 24px; fill: currentColor; }
+
+        /* Responsive */
+        @media (max-width: 1100px) {
+            header { padding: 15px 5%; height: auto; flex-direction: column; align-items: flex-start; gap: 15px; }
+            .nav-links { width: 100%; justify-content: flex-start; }
+            .split-grid { grid-template-columns: 1fr; }
+            .uni-portal { border-left: none; border-top: 1px solid rgba(255,255,255,0.1); padding-left: 0; padding-top: 20px; }
+            .contact-grid { grid-template-columns: 1fr; }
+            .glass-panel { padding: 2rem; }
+            .page { padding-top: 130px; }
+            .cv-fullscreen-container { height: calc(100vh - 180px); }
+            h2 { font-size: 2.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="neural-canvas"></canvas>
+
+    <header>
+        <a href="#home" class="nav-brand" onclick="switchPage('home'); return false;">
+            <img src="https://neurology.ufl.edu/wordpress/files/2023/10/Kaushik-Shivam-e1697566115865-300x300.jpg" alt="Shivam Kaushik" class="profile-photo" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'44\' height=\'44\'><rect width=\'44\' height=\'44\' fill=\'%231c1c1e\'/></svg>'">
+            <div class="brand-text">
+                <h1>Shivam Kaushik</h1>
+                <p>Neuroscience Researcher</p>
+            </div>
+        </a>
+        <div class="nav-links">
+            <a href="#home" onclick="switchPage('home'); return false;" id="nav-home" class="nav-btn active">Home</a>
+            <a href="#experience" onclick="switchPage('experience'); return false;" id="nav-experience" class="nav-btn">Experience</a>
+            <a href="#education" onclick="switchPage('education'); return false;" id="nav-education" class="nav-btn">Education</a>
+            <a href="#publications" onclick="switchPage('publications'); return false;" id="nav-publications" class="nav-btn">Publications</a>
+            <a href="#gallery" onclick="switchPage('gallery'); return false;" id="nav-gallery" class="nav-btn">Gallery</a>
+            <a href="#blog" onclick="switchPage('blog'); return false;" id="nav-blog" class="nav-btn">Blog</a>
+            <a href="#contact" onclick="switchPage('contact'); return false;" id="nav-contact" class="nav-btn">Contact</a>
+            <a href="#cv" onclick="switchPage('cv'); return false;" id="nav-cv" class="btn-highlight">CV</a>
+        </div>
+    </header>
+
+    <main>
+        <div id="page-home" class="page active">
+            <div class="content-container">
+                <div class="glass-panel" style="display: flex; flex-direction: column; justify-content: center; min-height: 60vh;">
+                    <h2 style="font-size: 3.5rem; border: none; margin-bottom: 1rem; background: #fff; -webkit-background-clip: text;">Shivam Kaushik</h2>
+                    <p style="font-size: 1.35rem; width: 100%; margin-bottom: 2rem; color: #a1a1a6; font-weight: 400; font-family: 'Comic Sans MS', 'Comic Sans', cursive;">
+                        <span style="color: var(--neon-cyan); font-weight: 600;">Researcher</span> specializing in <span style="color: var(--neon-cyan); font-weight: 600;">Neuroscience</span> and <span style="color: var(--neon-cyan); font-weight: 600;">Biotechnology</span>. Extensive expertise in Drosophila genetics, Two-photon calcium imaging, and behavioral neurobiology. Integrating complex wet-lab physiological assays with bioinformatics and computational data analysis to decode intricate neural and metabolic pathways.
+                    </p>
+
+                    <div class="social-row">
+                        <a href="https://www.linkedin.com/in/shivamk1495/" target="_blank" class="social-btn"><svg viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg> LinkedIn</a>
+                        <a href="https://scholar.google.com/citations?hl=en&user=eCJ1_ToAAAAJ" target="_blank" class="social-btn"><svg viewBox="0 0 24 24"><path d="M12 24a7 7 0 1 1 0-14 7 7 0 0 1 0 14zm0-24L0 9.5l4.838 3.94A8.991 8.991 0 0 1 12 9a8.991 8.991 0 0 1 7.162 4.44L24 9.5 12 0z"/></svg> Google Scholar</a>
+                        <a href="https://www.researchgate.net/profile/Shivam-Kaushik-8?ev=hdr_xprf" target="_blank" class="social-btn"><svg viewBox="0 0 24 24"><path d="M19.586 0H4.414C1.98 0 0 1.98 0 4.414v15.172C0 22.02 1.98 24 4.414 24h15.172C22.02 24 24 22.02 24 19.586V4.414C24 1.98 22.02 0 19.586 0zM7.5 17.25h-2.1v-6h2.1v6zm-1.05-7.05c-.75 0-1.35-.6-1.35-1.35s.6-1.35 1.35-1.35 1.35.6 1.35 1.35-.6 1.35-1.35 1.35zm9.6 7.05h-2.1v-3.45c0-.9-.05-2.1-1.35-2.1-1.35 0-1.5 1.05-1.5 2.1v3.45h-2.1v-6h2.1v.9c.3-.6 1.05-1.2 2.25-1.2 2.4 0 2.85 1.5 2.85 3.6v2.7z"/></svg> ResearchGate</a>
+                        <a href="https://orcid.org/0000-0001-8548-4136" target="_blank" class="social-btn"><svg viewBox="0 0 24 24"><path d="M12 0C5.372 0 0 5.372 0 12s5.372 12 12 12 12-5.372 12-12S18.628 0 12 0zM7.369 4.378c.525 0 .947.431.947.947s-.422.946-.947.946a.95.95 0 0 1-.947-.946c0-.522.422-.947.947-.947zm-.722 3.038h1.444v10.041H6.647V7.416zm3.562 0h3.9c3.712 0 5.344 2.653 5.344 5.025 0 2.578-2.016 5.025-5.325 5.025h-3.919V7.416zm1.444 1.303v7.444h2.297c3.272 0 4.022-2.584 4.022-3.722 0-2.016-1.284-3.722-4.097-3.722h-2.222z"/></svg> ORCID</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-experience" class="page">
+            <div class="content-container">
+                <div class="glass-panel">
+                    <h2>Research Experience</h2>
+                    
+                    <div class="split-grid">
+                        <div>
+                            <h3>Biological Scientist</h3>
+                            <div class="meta-info">University of Florida, Gainesville, FL, USA | Sep 2025 - Present</div>
+                            <ul>
+                                <li>Investigating the molecular mechanisms and genetic modifiers of neurodegenerative disease pathogenesis using <i>Drosophila melanogaster</i> models.</li>
+                                <li>Utilizing high-resolution imaging and optogenetic tools to identify and validate therapeutic targets for proteinopathies including Alzheimer's and ALS.</li>
+                            </ul>
+                        </div>
+                        <div class="uni-portal">
+                            <a href="https://www.ufl.edu/" target="_blank" class="uni-btn">University of Florida</a>
+                        </div>
+                    </div>
+
+                    <div class="split-grid">
+                        <div>
+                            <h3>Lab Technician</h3>
+                            <div class="meta-info">University of Florida, Gainesville, FL, USA | Sep 2023 - Sep 2025</div>
+                            <ul>
+                                <li>Investigated molecular pathways of neurodegeneration by using <i>Drosophila</i> genetics to identify and manipulate specific genes in the brain.</li>
+                                <li>Studied the link between genetic changes and behavior by combining molecular techniques with functional assays to track disease progression in fly models.</li>
+                            </ul>
+                        </div>
+                        <div class="uni-portal">
+                            <a href="https://www.ufl.edu/" target="_blank" class="uni-btn">University of Florida</a>
+                        </div>
+                    </div>
+
+                    <div class="split-grid">
+                        <div>
+                            <h3>Graduate Student</h3>
+                            <div class="meta-info">University of North Carolina, Chapel Hill, NC, USA | Jan 2022 - Dec 2022</div>
+                            <ul>
+                                <li>Investigated structural and functional synaptic plasticity within the <i>Drosophila</i> mushroom body using <i>in vivo</i> two-photon calcium imaging and optogenetics.</li>
+                                <li>Analyzed dopamine-dependent modulation of neural circuits to decode principles of associative learning and memory.</li>
+                            </ul>
+                        </div>
+                        <div class="uni-portal">
+                            <a href="https://www.unc.edu/" target="_blank" class="uni-btn">UNC Chapel Hill</a>
+                        </div>
+                    </div>
+
+                    <div class="split-grid" style="margin-bottom: 0;">
+                        <div>
+                            <h3>Research Assistant</h3>
+                            <div class="meta-info">Regional Centre for Biotechnology, India | Aug 2018 - Dec 2021</div>
+                            <ul>
+                                <li>Characterized nutrient-sensing pathways and central taste circuits using behavioral neurobiology and molecular tools.</li>
+                                <li>Developed and optimized quantitative assays for assessing chemosensory-driven foraging behaviors and metabolic homeostasis.</li>
+                            </ul>
+                        </div>
+                        <div class="uni-portal">
+                            <a href="https://www.rcb.res.in/" target="_blank" class="uni-btn">RCB Institute</a>
+                            </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-education" class="page">
+            <div class="content-container">
+                <div class="glass-panel">
+                    <h2>Education</h2>
+
+                    <div class="split-grid">
+                        <div>
+                            <h3>Ph.D. Student in Biology | Major: Neuroscience</h3>
+                            <div class="meta-info">University of North Carolina, Chapel Hill, USA | Jan 2022 - Dec 2022</div>
+                            <p style="color: #d2d2d7; font-size: 1.05rem;">Focused graduate coursework and research immersion in neural circuits and behavior.</p>
+                        </div>
+                        <div class="uni-portal">
+                            <a href="https://bio.unc.edu/" target="_blank" class="uni-btn">UNC Biology Dept</a>
+                        </div>
+                    </div>
+
+                    <div class="split-grid">
+                        <div>
+                            <h3>Master's of Technology in Biotechnology</h3>
+                            <div class="meta-info">Maharishi Dayanand University, India | Jul 2018 - Jul 2020</div>
+                            <ul>
+                                <li><strong>GPA:</strong> 3.5/4.0 | Graduated: Jul 2020</li>
+                                <li><strong>Dissertation:</strong> Understanding complex feeding and food foraging behavior in simple model systems like <i>Drosophila</i> by unveiling the unknown brain areas and neural circuits not known so far.</li>
+                <div class="meta-info">Regional Centre for Biotechnology, India</div>
+                            </ul>
+                        </div>
+                        <div class="uni-portal">
+                            <a href="https://mdu.ac.in/" target="_blank" class="uni-btn">MDU University</a>
+                        </div>
+                    </div>
+
+                    <div class="split-grid" style="margin-bottom: 0;">
+                        <div>
+                            <h3>Bachelor's of Technology in Biotechnology</h3>
+                            <div class="meta-info">Maharishi Dayanand University, India | Jul 2014 - May 2018</div>
+                            <ul>
+                                <li><strong>GPA:</strong> 3.8/4.0 | Graduated: May 2018</li>
+                                <li><strong>Dissertation:</strong> Understanding modulation of taste behaviour and effect on aging by dietary alterations using <i>Drosophila melanogaster</i>.</li>
+                <div class="meta-info">Regional Centre for Biotechnology, India</div>
+                            </ul>
+                        </div>
+                        <div class="uni-portal">
+                            <a href="https://mdu.ac.in/" target="_blank" class="uni-btn">MDU University</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-publications" class="page">
+            <div class="content-container">
+                <div class="glass-panel">
+                    <h2>Publications</h2>
+                    <div>
+                        <a href="https://www.biorxiv.org/content/10.1101/2022.02.01.478606v2" target="_blank" class="paper-link">
+                            <span><strong><u>Shivam Kaushik</u></strong>, Kartik Singh, Rahul Kumar, Sachin Kumar, Srishti Sanghi, Teiichi Tanimura, Diego E. Rincon-Limas, Pinky Kain, Activity and state-dependent modulation of salt taste behavior via pharyngeal neurons in <i>Drosophila melanogaster</i>.<div class="meta-info">Neuroscience Insights 2026</div></span>
+            <span class="open-btn-hover">Open</span>
+                        </a>
+                        <a href="https://www.biorxiv.org/content/10.1101/2022.02.01.478606v2" target="_blank" class="paper-link">
+                            <span><strong><u>Shivam Kaushik</u></strong>, Rahul Kumar, Sachin Kumar, Srishti Sanghi, Teiichi Tanimura, Diego E. Rincon-Limas, and Pinky Kain, Activity and state-dependent modulation of salt taste behavior via pharyngeal neurons in <i>Drosophila melanogaster</i>.<div class="meta-info">BioRixv 2024</div></span>
+            <span class="open-btn-hover">Open</span>
+                        </a>
+
+                        <a href="https://onlinelibrary.wiley.com/doi/10.1002/ana.27051" target="_blank" class="paper-link">
+                            <span>Swapnil Pandey, Deepak Chhangani, <strong><u>Shivam Kaushik</u></strong>, and Diego E. Rincon-Limas, The microRNA mir-33 regulates TDP-43-induced neurotoxicity in a fly model of FTLD/ALS.<div class="meta-info">Annals of Neurology 2024</div></span>
+            <span class="open-btn-hover">Open</span>
+                        </a>
+
+                        <a href="https://www.eneuro.org/content/10/10/ENEURO.0275-23.2023" target="_blank" class="paper-link">
+                            <span>Andrew M. Davidson, <strong><u>Shivam Kaushik</u></strong>, and Toshihide Hige, Dopamine-Dependent Plasticity Is Heterogeneously Expressed by Presynaptic Calcium Activity across Individual Boutons of the <i>Drosophila</i> Mushroom Body, eNeuro, 10(10), ENEURO.0275-23.2023.<div class="meta-info">eNeuro 2023</div></span>
+            <span class="open-btn-hover">Open</span>
+                        </a>
+
+                        <a href="https://app.jove.com/t/65955/tracking-sugar-elicited-local-searching-behavior-in-drosophila" target="_blank" class="paper-link">
+                            <span>Manal Shakeel, <strong><u>Shivam Kaushik</u></strong>, Teiichi Tanimura, Axel Brockmann, and Pinky Kain, Tracking Sugar-Elicited Local Searching Behavior in <i>Drosophila</i>, Journal of Visualized Experiments, (201), e65955.<div class="meta-info">JoVE 2023</div></span>
+            <span class="open-btn-hover">Open</span>
+                        </a>
+ <a href="https://www.mdpi.com/1422-0067/23/5/2694" target="_blank" class="paper-link">
+                            <span>Gouri Chopra, <strong><u>Shivam Kaushik</u></strong>, and Pinky Kain, Nutrient Sensing via Gut in <i>Drosophila melanogaster</i>, International Journal of Molecular Sciences, 23(5), 2694.<div class="meta-info">IJMS 2022</div></span>
+            <span class="open-btn-hover">Open</span>
+                        </a>
+ <a href="https://journals.sagepub.com/doi/10.1177/00368504211067666" target="_blank" class="paper-link">
+                            <span><strong><u>Shivam Kaushik</u></strong>, Srishti Sanghi, Sachin Kumar, Rahul Kumar, and Pinky Kain, Modulation of sugar feeding behavior by Gymnema sylvestre in <i>Drosophila melanogaster</i>, Science Progress. 2022;105(1).<div class="meta-info">Science Progress 2022</div></span>
+            <span class="open-btn-hover">Open</span>
+                        </a>
+
+ <a href="#" target="_blank" class="paper-link">
+    <span><strong><u>Shivam Kaushik</u></strong>, Diego E. Rincon-Limas, and Pinky Kain, Starvation and activity dependent modulation of salt taste behavior in Drosophila, <i>Alzheimer’s & Dementia</i>, 17(Suppl 12), e058538.<div class="meta-info">Alzheimers Dement 2021</div></span>
+    <span class="open-btn-hover">Open</span>
+</a>
+
+<a href="https://pubs.acs.org/doi/10.1021/acsomega.0c00840" target="_blank" class="paper-link">
+    <span>Sujeet Thakur, Krishnendu Goswami, Pallavi Rao, <strong><u>Shivam Kaushik</u></strong>, Bhanu Singh, Pinky Kain, Shailendra Asthana, Saikat Bhattacharjee, Prasenjit Guchhait, and S. Eswaran, Fluoresceinated aminohexanol tethered inositol hexakisphosphate: Studies on Arabidopsis thaliana and Drosophila melanogaster and docking with 2P1M Receptor, <i>ACS Omega</i>, 5(16), 9585–9597.<div class="meta-info">ACS Omega 2020</div></span>
+    <span class="open-btn-hover">Open</span>
+</a>
+
+<a href="https://journals.sagepub.com/doi/10.1177/1179069518806894" target="_blank" class="paper-link">
+    <span><strong><u>Shivam Kaushik</u></strong>, Rahul Kumar, and Pinky Kain, Salt an essential nutrient: Advances in understanding salt taste detection using Drosophila as a Model System, <i>Journal of Experimental Neuroscience</i>, 12, 1179069518806894.<div class="meta-info">JEN 2018</div></span>
+    <span class="open-btn-hover">Open</span>
+</a>
+
+<a href="#" target="_blank" class="paper-link">
+    <span><strong><u>Shivam Kaushik</u></strong>, Rahul Kumar, Sachin Kumar, Srishti Sanghi, Teiichi Tanimura, Diego E. Rincon-Limas, and Pinky Kain, Activity and state-dependent modulation of salt taste behavior via pharyngeal neurons in Drosophila melanogaster, <i>BioRixv</i> 2024.<div class="meta-info">BioRixv 2024</div></span>
+    <span class="open-btn-hover">Open</span>
+</a>
+
+                    </div>
+
+                    <h2 style="margin-top: 3rem;">Book Chapters</h2>
+                    <div>
+                        <a href="https://www.intechopen.com/chapters/68834" target="_blank" class="paper-link">
+    <span><strong><u>Shivam Kaushik</u></strong> and Pinky Kain, Understanding taste using Drosophila melanogaster, in <i>Animal Models in Medicine and Biology</i> (Eds. Eva Tvrdá and Sarat Chandra Yenisetti), IntechOpen.<div class="meta-info">IntechOpen 2019</div></span>
+    <span class="open-btn-hover">Open</span>
+</a>
+
+<a href="https://www.intechopen.com/chapters/72579" target="_blank" class="paper-link">
+    <span><strong><u>Shivam Kaushik</u></strong>, Shivangi Rawat, and Pinky Kain, A look into the central taste circuits using Drosophila melanogaster as a model system, in <i>Role of Obesity in Human Health and Disease</i> (Eds. Venketeshwer Rao and Leticia Rao), IntechOpen.<div class="meta-info">IntechOpen 2020</div></span>
+    <span class="open-btn-hover">Open</span>
+</a>
+
+<a href="https://www.intechopen.com/chapters/76800" target="_blank" class="paper-link">
+    <span>Zoha Sadaqat, <strong><u>Shivam Kaushik</u></strong>, and Pinky Kain, Gut feeding the brain: Drosophila gut an animal model for medicine to understand mechanism mediating food preferences, in <i>Preclinical Animal Modeling in Medicine</i> (Eds. Enkhsaikhan Purevjav, Joseph F. Pierre, and Lu Lu), IntechOpen.<div class="meta-info">IntechOpen 2021</div></span>
+    <span class="open-btn-hover">Open</span>
+</a>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div id="page-gallery" class="page">
+            <div class="content-container">
+                <div class="glass-panel">
+                    <h2>Work & Lab Gallery</h2>
+                    <p style="color: var(--text-muted); margin-bottom: 2rem;">A visual collection of my lab work, microscopy images, and research environments.</p>
+                    
+                    <div id="dynamic-gallery" class="gallery-grid">
+                        </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-blog" class="page">
+            <div class="content-container">
+                <div class="glass-panel">
+                    <h2>Research Blog & Updates</h2>
+                    <div class="blog-grid">
+                        <article class="blog-post">
+                            <div class="blog-date">February 2026</div>
+                            <h3 class="blog-title">Attending the IMPRS Selection Symposium</h3>
+                            <p class="blog-content">
+                                Recently had the opportunity to attend the IMPRS Selection Symposium in Jupiter, Florida, focusing on Synapses and Circuits. It was an incredible environment to discuss structural and functional plasticity and the future of computational data integration in our field.
+                            </p>
+                        </article>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-contact" class="page">
+            <div class="content-container">
+                <div class="glass-panel">
+                    <h2>Contact & Scheduling</h2>
+                    <div class="contact-grid">
+                        <div class="contact-card">
+                            <h3>Get in Touch</h3>
+                            <p style="color: #86868b; margin-bottom: 2rem;">I welcome inquiries regarding research or technical discussions. Please reach out via the channels below.</p>
+                            <p style="font-size: 1.1rem; color: #fff;"><strong>Email:</strong> <br><a href="mailto:Shivamk1495@gmail.com" style="color: var(--neon-blue); text-decoration: none;">Shivamk1495@gmail.com</a></p>
+                            <p style="font-size: 1.1rem; margin-top: 20px; color: #fff;"><strong>Phone:</strong> <br><span style="color: var(--neon-blue);">+1 (352) 283-4946</span></p>
+                        </div>
+                        <div class="contact-card">
+                            <h3>Schedule a Meeting</h3>
+                            <p style="color: #86868b; margin-bottom: 2rem;">To facilitate a structured discussion regarding projects or research synergy, please select a suitable time on my digital calendar.</p>
+                            <a href="https://calendar.app.google/vTEBXYQmYhyrfRqh6" target="_blank" class="btn-large">Schedule a Consultation</a>
+                            <p style="font-size: 0.8rem; color: #64748b; margin-top: 15px;">Powered by Google</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-skills" class="page">
+            <div class="content-container">
+                <div class="glass-panel">
+                    <h2>Technical Skills</h2>
+                    <ul style="margin-bottom: 3rem;">
+                        <li><strong>Drosophila Genetics:</strong> Microdissections, GAL4-UAS, RNAi knockdown, LexA/LexAop, optogenetic systems, Two-choice feeding assays, PER, CAFE assay, learning/memory paradigms.</li>
+                        <li><strong>Microscopy & Imaging:</strong> Two-photon calcium imaging, confocal and super-resolution microscopy, SEM, immunohistochemistry.</li>
+                        <li><strong>Molecular Biology:</strong> PCR, DNA isolation, Western blotting, protein-protein interaction analysis, and histology.</li>
+                        <li><strong>Bioinformatics:</strong> Sequence alignment (BLAST, Clustal Omega), AlphaFold2, integrating databases (NCBI, UniProt, FlyBase).</li>
+                        <li><strong>Software:</strong> MATLAB, GraphPad Prism, Origin, Adobe Illustrator, C++, Biopython.</li>
+                    </ul>
+
+                    <h2>Volunteer & Outreach</h2>
+                    <ul>
+                        <li><strong>Program Organizer (July 2017):</strong> Science outreach for STEM education at Government Sr. Sec. School, New Delhi.</li>
+                        <li><strong>Curriculum Development (Nov 2018):</strong> Designed "We Are What We Eat" nutrition program for 200+ students.</li>
+                        <li><strong>Community Engagement (Nov 2018):</strong> Educational programs in Tehri, Uttarakhand, India.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-conferences" class="page">
+            <div class="content-container">
+                <div class="glass-panel">
+                    <h2>Conference Presentations</h2>
+                    <ul>
+                        <li><strong>FL Genetics 2025:</strong> Investigating the Impact of SARS-CoV-2 Proteins on Neurodegeneration in Fruit Flies.</li>
+                        <li><strong>UF URS 2025:</strong> Studying the role of SARS-CoV-2 proteins in neurodegeneration using fruit flies.</li>
+                        <li><strong>IRCND 2025:</strong> A Drosophila-based genetic screen reveals new modifiers of Abeta and Tau co-pathology.</li>
+                        <li><strong>Neurology Day 2025:</strong> Discovering Novel Targets and Mechanisms Underlying Alzheimer Disease Pathogenesis in Drosophila.</li>
+                        <li><strong>ANA 2024:</strong> The microRNA miR-33 regulates TDP-43-induced neurotoxicity in a fly model of FTLD/ALS.</li>
+                        <li><strong>IBRO-APRC 2021:</strong> Understanding the role of taste circuits and its modulation using Drosophila melanogaster model (Best Oral Presentation).</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-cv" class="page">
+            <div class="content-container" style="max-width: 1200px; width: 95%;">
+                <div class="cv-fullscreen-container">
+                    <iframe src="Shivam_Kaushik_CV.pdf" width="100%" height="100%" style="border: none;" title="CV Viewer"></iframe>
+                </div>
+            </div>
+            <a href="Shivam_Kaushik_CV.pdf" download class="circular-download" title="Download CV">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+            </a>
+        </div>
+    </main>
+
+    <script>
+        try {
+            function cleanCitations(node) {
+                if (node.nodeType === 3) { 
+                    node.nodeValue = node.nodeValue.replace(/\+\]/g, '');
+                } else {
+                    let children = Array.from(node.childNodes);
+                    for (let child of children) { cleanCitations(child); }
+                }
+            }
+            document.addEventListener('DOMContentLoaded', () => { cleanCitations(document.body); });
+        } catch(e) {}
+    </script>
+
+    <script>
+        try {
+            function switchPage(pageId) {
+                document.querySelectorAll('.page').forEach(page => { page.classList.remove('active'); });
+                document.querySelectorAll('.nav-links .nav-btn, .nav-links .btn-highlight').forEach(btn => { btn.classList.remove('active'); });
+                
+                const targetPage = document.getElementById('page-' + pageId);
+                if(targetPage) { targetPage.classList.add('active'); }
+                
+                const targetNav = document.getElementById('nav-' + pageId);
+                if(targetNav) { targetNav.classList.add('active'); }
+
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        } catch(e) {}
+    </script>
+
+    <script>
+        try {
+            const canvas = document.getElementById('neural-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            let width, height;
+            let neurons = [];
+            let signals = [];
+            const mouse = { x: null, y: null, radius: 180 };
+
+            window.addEventListener('mousemove', (e) => {
+                mouse.x = e.x;
+                mouse.y = e.y;
+            });
+
+            function resize() {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+                initNeurons();
+            }
+
+            class Neuron {
+                constructor() {
+                    this.x = Math.random() * width;
+                    this.y = Math.random() * height;
+                    this.vx = (Math.random() - 0.5) * 0.4;
+                    this.vy = (Math.random() - 0.5) * 0.4;
+                    this.radius = Math.random() * 2 + 1;
+                }
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    if (this.x < 0 || this.x > width) this.vx *= -1;
+                    if (this.y < 0 || this.y > height) this.vy *= -1;
+                }
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(10, 132, 255, 0.8)'; /* Apple Blue Soma */
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = 'rgba(10, 132, 255, 0.8)';
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+            }
+
+            class Signal {
+                constructor(startX, startY, endX, endY) {
+                    this.x = startX;
+                    this.y = startY;
+                    this.targetX = endX;
+                    this.targetY = endY;
+                    this.progress = 0;
+                    this.speed = Math.random() * 0.02 + 0.01;
+                    this.active = true;
+                }
+                update() {
+                    this.progress += this.speed;
+                    if (this.progress >= 1) {
+                        this.active = false; 
+                    } else {
+                        this.x = this.x + (this.targetX - this.x) * this.speed;
+                        this.y = this.y + (this.targetY - this.y) * this.speed;
+                    }
+                }
+                draw() {
+                    if (!this.active) return;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+                    ctx.fillStyle = '#64D2FF'; /* Bright Apple Cyan Signal */
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = '#64D2FF';
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+            }
+
+            function initNeurons() {
+                neurons = [];
+                signals = [];
+                let numNeurons = (width * height) / 15000; 
+                for (let i = 0; i < numNeurons; i++) {
+                    neurons.push(new Neuron());
+                }
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, width, height);
+                
+                for (let i = 0; i < neurons.length; i++) {
+                    neurons[i].update();
+                    neurons[i].draw();
+                    
+                    for (let j = i + 1; j < neurons.length; j++) {
+                        let dx = neurons[i].x - neurons[j].x;
+                        let dy = neurons[i].y - neurons[j].y;
+                        let distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance < 150) {
+                            ctx.beginPath();
+                            ctx.strokeStyle = `rgba(191, 90, 242, ${0.4 - (distance/150)*0.4})`; /* Apple Purple Dendrites */
+                            ctx.lineWidth = 1;
+                            ctx.moveTo(neurons[i].x, neurons[i].y);
+                            ctx.lineTo(neurons[j].x, neurons[j].y);
+                            ctx.stroke();
+
+                            if (Math.random() < 0.0015) {
+                                signals.push(new Signal(neurons[i].x, neurons[i].y, neurons[j].x, neurons[j].y));
+                            }
+                        }
+                    }
+                }
+
+                for (let i = signals.length - 1; i >= 0; i--) {
+                    signals[i].update();
+                    signals[i].draw();
+                    if (!signals[i].active) signals.splice(i, 1);
+                }
+
+                requestAnimationFrame(animate);
+            }
+
+            window.addEventListener('resize', resize);
+            resize();
+            animate();
+        } catch(e) {}
+    </script>
+
+    <script>
+        // 1. ADDED GRAPHICAL FIGURES FROM PUBLICATIONS & BOOK CHAPTERS
+        const galleryData = [
+            { 
+                src: 'https://www.researchgate.net/profile/Shivam-Kaushik-8/publication/329116277/figure/fig1/AS:695593881513985@1542854972166/Gustatory-system-of-Drosophila-A-Cartoon-showing-the-presence-of-GRs-on-various-taste.png', 
+                caption: '<b>Salt Taste Review (2018)</b><br>Figure 1: Gustatory system of adult Drosophila showing GR distribution on peripheral organs.' 
+            },
+            { 
+                src: 'https://www.researchgate.net/profile/Shivam-Kaushik-8/publication/337043166/figure/fig1/AS:822416489512960@1573081691230/Taste-system-of-adult-Drosophila-A-Taste-neurons-are-located-on-different-body-parts-of.png', 
+                caption: '<b>Understanding Taste (Book Chapter, 2019)</b><br>Detailed schematic of peripheral taste neurons and sensillum structures across body parts.' 
+            },
+            { 
+                src: 'https://www.researchgate.net/profile/Shivam-Kaushik-8/publication/354627232/figure/fig2/AS:1068494056697858@1631758586073/Drosophila-taste-system-A-Adult-fly-accessing-sugar-drop-with-the-tarsi-Proboscis.png', 
+                caption: '<b>Central Taste Circuits (Book Chapter, 2021)</b><br>Overview of the taste processing relay from peripheral organs to the Subesophageal Zone (SEZ).' 
+            },
+            { 
+                src: 'https://www.researchgate.net/profile/Shivam-Kaushik-8/publication/350927488/figure/fig1/AS:1013444215160833@1618633756328/Fruit-flies-have-a-simple-and-similar-to-humans-gut-system-Figure-1-In-mammals.png', 
+                caption: '<b>Gut Feeding the Brain (Book Chapter, 2021)</b><br>Figure 1: Homology between Drosophila and mammalian gut systems in nutrient sensing.' 
+            },
+            { 
+                src: 'https://www.researchgate.net/profile/Manal-Shakeel/publication/375725039/figure/fig3/AS:11431281210148386@1700259166664/Necessity-of-the-sugar-intake-for-initiating-local-search-A-Individual-trajectories-of.png', 
+                caption: '<b>JoVE (2023)</b><br>Visualizing individual search trajectories and meandering paths triggered by sugar intake.' 
+            },
+            { 
+                src: 'https://www.researchgate.net/profile/Andrew-Davidson-7/publication/374823190/figure/fig3/AS:11431281198579450@1698114480000/Calcium-imaging-of-MB-boutons-Dopamine-Dependent-Plasticity-is-Heterogeneously.png', 
+                caption: '<b>eNeuro (2023)</b><br>Two-photon calcium imaging revealing heterogeneous dopamine-dependent plasticity in the MB.' 
+            }
+        ];
+
+        // 2. BUILD THE GALLERY
+        function renderGallery() {
+            const container = document.getElementById('dynamic-gallery');
+            if (!container) return;
+
+            container.innerHTML = galleryData.map(item => `
+                <div class="gallery-item">
+                    <img src="${item.src}" alt="${item.caption}" class="gallery-img" 
+                         onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'400\\' height=\\'300\\'><rect width=\\'400\\' height=\\'300\\' fill=\\'%231c1c1e\\'/><text x=\\'50%\\' y=\\'50%\\' fill=\\'%2386868b\\' font-size=\\'16\\' font-family=\\'sans-serif\\' text-anchor=\\'middle\\'>Image Not Found</text></svg>'">
+                    <div class="gallery-caption">${item.caption}</div>
+                </div>
+            `).join('');
+        }
+
+        // 3. INITIALIZE
+        document.addEventListener('DOMContentLoaded', renderGallery);
+    </script>
+</body>
+</html>
